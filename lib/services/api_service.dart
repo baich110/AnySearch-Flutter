@@ -187,7 +187,7 @@ class ApiService {
       .allMatches(content).toList();
     if (sections.length >= queries.length) {
       final parts = content.split(RegExp(r'\n## Query \d+'))
-        .where((s) => s.isNotBlank()).toList();
+        .where((s) => s.trim().isNotEmpty).toList();
       for (int i = 0; i < queries.length && i < parts.length; i++) {
         result[queries[i]] = _parseSearchResults(parts[i]);
       }
