@@ -1,0 +1,41 @@
+name: AnySearch
+description: AnySearch 跨平台搜索引擎 - Flutter (Android + Windows + Web)
+publish_to: "none"
+version: 2.0.0+1
+
+environment:
+  sdk: ^3.32.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # 网络
+  dio: ^5.7.0
+
+  # 状态管理
+  provider: ^6.1.2
+
+  # Markdown 渲染
+  flutter_markdown: ^0.7.4+3
+  markdown: ^7.2.2
+
+  # URL 打开
+  url_launcher: ^6.3.1
+
+  # 本地存储
+  shared_preferences: ^2.3.2
+
+  # 文件下载
+  path_provider: ^2.1.4
+
+  # 桌面窗口管理
+  window_manager: ^0.4.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
