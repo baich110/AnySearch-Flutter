@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../viewmodels/search_viewmodel.dart';
 
 class AboutScreen extends StatelessWidget {
