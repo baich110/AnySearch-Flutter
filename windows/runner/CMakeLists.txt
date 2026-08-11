@@ -21,6 +21,6 @@ apply_standard_settings(${BINARY_NAME})
 target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
-iself_target_is_msvc(${BINARY_NAME})
+
 
 add_dependencies(${BINARY_NAME} flutter_assemble)
