@@ -94,6 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   IconButton(
                     icon: const Icon(Icons.expand_more),
                     tooltip: '垂直领域',
+                    onPressed: () {},
                   ),
                 ],
               ),
