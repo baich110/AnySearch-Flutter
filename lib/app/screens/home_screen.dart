@@ -12,7 +12,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _controller = TextEditingController();
-  bool _showVerticalSheet = false;
 
   @override
   void dispose() { _controller.dispose(); super.dispose(); }
@@ -95,7 +94,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   IconButton(
                     icon: const Icon(Icons.expand_more),
                     tooltip: '垂直领域',
-                    onPressed: () => setState(() => _showVerticalSheet = true),
                   ),
                 ],
               ),
