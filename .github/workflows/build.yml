@@ -23,7 +23,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - run: flutter create . --platforms=android --project-name=anysearch
+      - run: rm -rf android && flutter create . --platforms=android --project-name=anysearch
       - name: Decode keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks || true
@@ -66,9 +66,8 @@ jobs:
           cache: true
 
       - run: flutter config --enable-windows-desktop
-      - run: flutter create . --platforms=windows --project-name=anysearch
+      - run: rm -rf windows && flutter create . --platforms=windows --project-name=anysearch
       - run: flutter pub get
-      - run: flutter precache --windows
       - run: flutter build windows --release
 
       - name: Archive Windows build
@@ -91,7 +90,7 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - run: flutter create . --platforms=web --project-name=anysearch
+      - run: rm -rf web && flutter create . --platforms=web --project-name=anysearch
       - run: flutter pub get
       - run: flutter build web --release
 
