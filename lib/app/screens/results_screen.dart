@@ -20,7 +20,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
   Widget build(BuildContext context) {
     final vm = context.watch<SearchViewModel>();
     final state = vm.state as UiStateResults;
-    final totalCount = state.grouped.values.fold(0, (s, l) => s + l.length);
+    final totalCount = state.grouped.values.fold<int>(0, (s, l) => s + l.length);
 
     return PopScope(
       canPop: false,
@@ -39,7 +39,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
         body: ListView.builder(
           controller: _scrollController,
           padding: const EdgeInsets.all(16),
-          itemCount: state.grouped.values.fold(0, (s, l) => s + l.length),
+          itemCount: state.grouped.values.fold<int>(0, (s, l) => s + l.length),
           itemBuilder: (context, index) {
             final flat = state.grouped.values.expand((l) => l).toList();
             final result = flat[index];
