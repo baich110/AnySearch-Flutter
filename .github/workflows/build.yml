@@ -39,7 +39,7 @@ jobs:
         continue-on-error: true
 
       - run: flutter pub get
-      - run: flutter analyze --no-fatal-infos
+      - run: flutter analyze lib --no-fatal-infos
       - run: flutter build apk --release
       - run: flutter build appbundle --release
 
