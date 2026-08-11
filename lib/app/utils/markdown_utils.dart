@@ -1,6 +1,8 @@
 /// Markdown 工具函数
 /// 从 Kotlin CleanMarkdownRenderer.kt 翻译
 
+library markdown_utils;
+
 /// 按逻辑块切分 Markdown
 List<String> parseMarkdownBlocks(String markdown) {
   final blocks = <String>[];
