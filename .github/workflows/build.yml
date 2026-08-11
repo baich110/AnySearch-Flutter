@@ -68,6 +68,7 @@ jobs:
       - run: flutter config --enable-windows-desktop
       - run: flutter create . --platforms=windows --project-name=anysearch
       - run: flutter pub get
+      - run: flutter precache --windows
       - run: flutter build windows --release
 
       - name: Archive Windows build
