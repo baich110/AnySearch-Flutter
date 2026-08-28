@@ -24,8 +24,9 @@ class BrowserScreen extends StatelessWidget {
             tooltip: '退出浏览器',
             onPressed: vm.backFromBrowser,
           ),
-          title: Text(url,
-            maxLines: 1, overflow: TextOverflow.ellipsis),
+          title: Semantics(header: true,
+            child: Text(url,
+              maxLines: 1, overflow: TextOverflow.ellipsis)),
           actions: [
             IconButton(
               icon: const Icon(Icons.article),

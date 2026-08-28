@@ -43,9 +43,12 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 40),
-            Text('AnySearch',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold)),
+            Semantics(
+              header: true,
+              child: Text('AnySearch',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold)),
+            ),
             const SizedBox(height: 32),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,10 +104,15 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerLeft,
-                child: InputChip(
-                  label: Text('垂直搜索: ${VerticalDomain.chineseName(vm.selectedVertical!)}'),
-                  onDeleted: () => vm.selectVertical(null),
-                  deleteIcon: const Icon(Icons.close, size: 18),
+                child: Semantics(
+                  selected: true,
+                  label: '已选择垂直搜索领域：${VerticalDomain.chineseName(vm.selectedVertical!)}',
+                  child: InputChip(
+                    label: Text('垂直搜索: ${VerticalDomain.chineseName(vm.selectedVertical!)}'),
+                    onDeleted: () => vm.selectVertical(null),
+                    deleteIcon: const Icon(Icons.close, size: 18),
+                    deleteButtonTooltipMessage: '取消垂直搜索',
+                  ),
                 ),
               ),
             ],
@@ -120,8 +128,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const Spacer(),
             if (vm.history.isNotEmpty) ...[
-              Text('最近搜索',
-                style: Theme.of(context).textTheme.labelMedium),
+              Semantics(
+                header: true,
+                child: Text('最近搜索',
+                  style: Theme.of(context).textTheme.labelMedium),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 4,
@@ -155,9 +166,12 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text('选择垂直领域',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold)),
+                child: Semantics(
+                  header: true,
+                  child: Text('选择垂直领域',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold)),
+                ),
               ),
               // 取消垂直搜索
               if (vm.selectedVertical != null)
@@ -175,22 +189,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   shrinkWrap: true,
                   children: vm.verticals.map((domain) {
                     final isSelected = vm.selectedVertical == domain.key;
-                    return ListTile(
-                      title: Text(domain.name,
-                        style: TextStyle(
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : null,
-                          fontWeight: isSelected ? FontWeight.bold : null,
-                        )),
-                      trailing: isSelected
-                          ? Icon(Icons.check,
-                              color: Theme.of(context).colorScheme.primary)
-                          : null,
-                      onTap: () {
-                        vm.selectVertical(domain.key);
-                        Navigator.pop(sheetContext);
-                      },
+                    return Semantics(
+                      selected: isSelected,
+                      label: isSelected
+                          ? '${domain.name}，已选中'
+                          : domain.name,
+                      child: ListTile(
+                        title: Text(domain.name,
+                          style: TextStyle(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : null,
+                            fontWeight: isSelected ? FontWeight.bold : null,
+                          )),
+                        trailing: isSelected
+                            ? Icon(Icons.check,
+                                color: Theme.of(context).colorScheme.primary)
+                            : null,
+                        onTap: () {
+                          vm.selectVertical(domain.key);
+                          Navigator.pop(sheetContext);
+                        },
+                      ),
                     );
                   }).toList(),
                 ),

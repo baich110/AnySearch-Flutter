@@ -25,7 +25,8 @@ class _AboutScreenState extends State<AboutScreen> {
             tooltip: '返回',
             onPressed: vm.backToHome,
           ),
-          title: const Text('关于', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: Semantics(header: true,
+            child: const Text('关于', style: TextStyle(fontWeight: FontWeight.bold))),
         ),
         body: ListView(
           padding: const EdgeInsets.all(16),
