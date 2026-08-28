@@ -43,7 +43,7 @@ class ApiService {
     return _parseExtractResult(content, url);
   }
 
-  Future<UpdateInfo?> checkUpdate() async {
+  Future<UpdateInfo?> checkUpdate({int currentVersionCode = 0}) async {
     try {
       final resp = await _dio.get(
         'https://files.baichabuyu.asia/public/anysearch/update.json');
@@ -55,11 +55,12 @@ class ApiService {
           updateLog: e['updateLog'] ?? '',
         )).toList();
       return UpdateInfo(
-        versionCode: json['latestVersionCode'] ?? 0,
-        versionName: json['latestVersionName'] ?? '',
+        versionCode: json['versionCode'] ?? json['latestVersionCode'] ?? 0,
+        versionName: json['versionName'] ?? json['latestVersionName'] ?? '',
         downloadUrl: json['downloadUrl'] ?? '',
         updateLog: json['updateLog'] ?? '',
         history: history,
+        currentVersionCode: currentVersionCode,
       );
     } catch (_) { return null; }
   }
@@ -226,6 +227,153 @@ class ApiService {
     final title = titleMatch?.group(1)?.trim() ?? sourceUrl;
     return ExtractedContent(title: title, source: sourceUrl,
       markdown: content, success: content.isNotBlank);
+  }
+
+  // ==================== AI 智能排版（商汤 SenseNova） ====================
+  static const String _aiEndpoint =
+      'https://token.sensenova.cn/v1/chat/completions';
+  static const String _aiApiKey = 'sk-GmK471pZW5taBLL4O3XsK8w1Xtx3dINr';
+  static const String _aiModel = 'sensenova-6.8-flash-lite';
+  static const int _aiMaxTokens = 8192;
+
+  /// 把 MCP 提取的原始内容交给 AI，排版成 RichContent JSON
+  Future<String> aiFormatContent(
+      String title, String rawMarkdown) async {
+    final input = rawMarkdown.length > 15000
+        ? rawMarkdown.substring(0, 15000)
+        : rawMarkdown;
+
+    const systemPrompt = '''
+你是一个内容排版工具，不是作者。你的唯一任务是把用户提供的原文**原样排版**成结构化 JSON。
+禁止改写、润色、扩写、总结原文内容，禁止新增任何原文没有的内容。
+
+## 铁律（必须严格遵守）
+1. **只排版，不创作**：正文文字必须忠实于原文，一个词都不要改、不要润色、不要扩写
+2. **完整保留所有超链接**：原文中每个链接 [文字](url) 都必须用 link 组件原样保留，链接文字和 url 都不能丢、不能改、不能漏
+3. 只剔除明显的噪音：URL 残渣、引用标注[1]、markdown 语法残留、乱码
+4. 输出必须是严格合法的 JSON，不要任何解释、不要 ```json 代码块标记、不要多余文字
+## 输出格式（只输出这个 JSON）
+{"type":"rich","title":"文章标题","blocks":[
+  {"type":"heading","level":1,"content":"标题"},
+  {"type":"text","content":"段落"},
+  {"type":"bold","content":"加粗"},
+  {"type":"link","text":"链接文字","url":"https://真实url"},
+  {"type":"list","items":["项1","项2"]},
+  {"type":"quote","content":"引用"},
+  {"type":"divider"},
+  {"type":"image","url":"https://图片","content":"描述"}
+]}
+## 可用组件类型（只能这些）
+heading(level 1-6) / text / bold / italic / link(text+url) / list(items数组) / quote / code(content+language) / divider / image(url+content)
+## 排版原则
+1. 用 heading 划分章节、text 放段落、list 放列表、link 放链接、quote 放引用
+2. 中文排版（原文英文则保持原文语言，不翻译）
+3. 内容多长就多长，忠实呈现，不要截断、不要精简
+''';
+
+    var assistantContent =
+        await _callAiForFormat(systemPrompt, title, input);
+    // 校验格式，不合法则重试一次
+    final validation = _validateRichJson(assistantContent);
+    if (!validation.$1) {
+      assistantContent = await _callAiForFormat(
+        systemPrompt, title, input, retryFeedback: validation.$2);
+    }
+    return _extractRichJson(assistantContent, title);
+  }
+
+  Future<String> _callAiForFormat(
+      String systemPrompt, String title, String input,
+      {String? retryFeedback}) async {
+    final messages = <Map<String, dynamic>>[
+      {'role': 'system', 'content': systemPrompt},
+      {'role': 'user', 'content': '标题：$title\n\n原始内容：\n$input'},
+    ];
+    if (retryFeedback != null) {
+      messages.add(
+          {'role': 'assistant', 'content': '（上次输出不符合要求）'});
+      messages.add({
+        'role': 'user',
+        'content': '你上次的输出不合法，工具校验失败：$retryFeedback。'
+            '请重新严格按要求输出合法 JSON，只排版、保留全部链接、不要润色。'
+      });
+    }
+    try {
+      final resp = await _dio.post(_aiEndpoint,
+        data: {
+          'model': _aiModel,
+          'messages': messages,
+          'temperature': 0.3,
+          'max_tokens': _aiMaxTokens,
+        },
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $_aiApiKey',
+            'Content-Type': 'application/json',
+          },
+          receiveTimeout: const Duration(seconds: 90),
+        ));
+      final content = resp.data['choices']?[0]?['message']?['content'];
+      return content ?? _buildFallbackRichJson(title, 'AI 排版无返回内容');
+    } catch (e) {
+      return _buildFallbackRichJson(title, 'AI 排版网络异常');
+    }
+  }
+
+  /// 校验 RichContent JSON 是否符合 schema
+  (bool, String) _validateRichJson(String content) {
+    final text = content.trim();
+    final start = text.indexOf('{');
+    final end = text.lastIndexOf('}');
+    if (start < 0 || end <= start) {
+      return (false, '输出不是有效的 JSON 对象（缺少花括号）');
+    }
+    try {
+      final root = jsonDecode(text.substring(start, end + 1));
+      final blocks = root['blocks'];
+      if (blocks == null || blocks is! List || blocks.isEmpty) {
+        return (false, '缺少 blocks 数组字段');
+      }
+      const validTypes = {
+        'heading', 'text', 'bold', 'italic', 'link', 'list',
+        'quote', 'code', 'divider', 'image',
+      };
+      for (final b in blocks) {
+        final type = b['type'];
+        if (type == null || !validTypes.contains(type)) {
+          return (false, '不支持的组件类型: $type');
+        }
+      }
+      return (true, '');
+    } catch (e) {
+      return (false, 'JSON 解析失败');
+    }
+  }
+
+  /// 从 AI 返回内容中提取 RichContent JSON
+  String _extractRichJson(String content, String title) {
+    var text = content.trim();
+    text = text.replaceAll(RegExp(r'^```(?:json)?\s*'), '');
+    text = text.replaceAll(RegExp(r'\s*```$'), '');
+    final start = text.indexOf('{');
+    final end = text.lastIndexOf('}');
+    if (start >= 0 && end > start) {
+      return text.substring(start, end + 1);
+    }
+    return _buildFallbackRichJson(title, 'AI 返回格式无法解析');
+  }
+
+  /// 构建失败/兜底的 RichContent JSON
+  String _buildFallbackRichJson(String title, String error) {
+    return jsonEncode({
+      'type': 'rich',
+      'title': title,
+      'blocks': [
+        {'type': 'heading', 'level': 1, 'content': 'AI 排版未完成'},
+        {'type': 'text', 'content': error},
+        {'type': 'text', 'content': '请稍后重试，或切换其他渲染模式。'},
+      ],
+    });
   }
 }
 

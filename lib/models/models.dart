@@ -80,8 +80,12 @@ class UpdateInfo {
   final String downloadUrl;
   final String updateLog;
   final List<HistoryItem> history;
+  final int currentVersionCode;
   const UpdateInfo({required this.versionCode, required this.versionName,
-    required this.downloadUrl, required this.updateLog, this.history = const []});
+    required this.downloadUrl, required this.updateLog,
+    this.history = const [], this.currentVersionCode = 0});
+
+  bool get hasUpdate => versionCode > currentVersionCode;
 }
 
 class HistoryItem {
@@ -107,10 +111,17 @@ class UiStateReading extends UiState {
   final ExtractedContent content;
   final String fromUrl;
   final bool isTranslating;
-  UiStateReading(this.content, this.fromUrl, {this.isTranslating = false});
+  final String? aiHtml;
+  UiStateReading(this.content, this.fromUrl,
+      {this.isTranslating = false, this.aiHtml});
 }
 class UiStateError extends UiState {
   final String message;
   UiStateError(this.message);
 }
 class UiStateAbout extends UiState {}
+class UiStateHistory extends UiState {}
+class UiStateBrowsing extends UiState {
+  final String url;
+  UiStateBrowsing(this.url);
+}

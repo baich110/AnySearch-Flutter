@@ -12,7 +12,8 @@ class Win32Window {
   struct Point { unsigned int x; unsigned int y; };
   struct Size { unsigned int width; unsigned int height; };
 
-  Win32Window();n  virtual ~Win32Window();
+  Win32Window();
+  virtual ~Win32Window();
 
   bool Create(const std::wstring& title, const Point& origin, const Size& size);
   bool Show();
@@ -24,13 +25,19 @@ class Win32Window {
  protected:
   virtual bool OnCreate();
   virtual void OnDestroy();
+  virtual void UpdateTheme(HWND const window);
 
  private:
   friend class WindowClassRegistrar;
   static LRESULT CALLBACK WndProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam);
+  static Win32Window* GetThisFromHandle(HWND const window) noexcept;
+  LRESULT MessageHandler(HWND window, UINT const message, WPARAM const wparam, LPARAM const lparam) noexcept;
+  RECT GetClientArea();
 
   HWND window_handle_ = nullptr;
+  HWND child_content_ = nullptr;
   bool quit_on_close_ = false;
+  bool class_registered_ = false;
 };
 
 #endif  // RUNNER_WIN32_WINDOW_H_

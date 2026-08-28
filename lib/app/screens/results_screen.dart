@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../viewmodels/search_viewmodel.dart';
 import '../../models/models.dart';
 
@@ -24,13 +23,13 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, _) { if (!didPop) vm.reset(); },
+      onPopInvokedWithResult: (didPop, _) { if (!didPop) vm.backFromHistoryResults(); },
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             tooltip: '返回搜索',
-            onPressed: vm.reset,
+            onPressed: vm.backFromHistoryResults,
           ),
           title: Semantics(header: true, child: Text(
             '搜索结果 · $totalCount 条',
@@ -47,7 +46,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
               result: result,
               index: index,
               onRead: () { vm.extractContent(result.url); },
-              onBrowse: () => launchUrl(Uri.parse(result.url)),
+              onBrowse: () { vm.openInBrowser(result.url); },
+              onReadTranslate: () { vm.extractAndTranslate(result.url); },
             );
           },
         ),
@@ -61,9 +61,11 @@ class _ResultCard extends StatelessWidget {
   final int index;
   final VoidCallback onRead;
   final VoidCallback onBrowse;
+  final VoidCallback onReadTranslate;
 
   const _ResultCard({required this.result, required this.index,
-    required this.onRead, required this.onBrowse});
+    required this.onRead, required this.onBrowse,
+    required this.onReadTranslate});
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +118,13 @@ class _ResultCard extends StatelessWidget {
                           Text('提取正文 ›',
                             style: Theme.of(context).textTheme.labelMedium?.copyWith(
                               color: Theme.of(context).colorScheme.primary)),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.translate, size: 18),
+                            tooltip: '提取并翻译',
+                            onPressed: onReadTranslate,
+                          ),
+                          const SizedBox(width: 4),
                           IconButton(
                             icon: const Icon(Icons.open_in_browser, size: 18),
                             tooltip: '浏览器打开',
