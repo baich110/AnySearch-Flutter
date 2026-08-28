@@ -44,6 +44,13 @@ class ApiService {
 
   Future<ExtractedContent> extract(String url) async {
     final content = await _callMcp('extract', {'url': url});
+    // 后端提取失败时返回 "extract_failed\nUnable to extract content from the URL."
+    final trimmed = content.trim();
+    if (trimmed.startsWith('extract_failed') ||
+        trimmed.startsWith('Unable to extract') ||
+        trimmed.contains('Unable to extract content from the URL')) {
+      throw Exception('无法提取该网页正文：可能页面需要登录、有反爬保护，或网页内容为空。');
+    }
     return _parseExtractResult(content, url);
   }
 
@@ -227,10 +234,24 @@ class ApiService {
   }
 
   ExtractedContent _parseExtractResult(String content, String sourceUrl) {
-    final titleMatch = RegExp(r'^#\s+(.+)$', multiLine: true).firstMatch(content);
+    // 后端成功时返回嵌套 JSON：{"url":"...","title":"...","content":"...markdown..."}
+    final text = content.trim();
+    if (text.startsWith('{')) {
+      try {
+        final map = jsonDecode(text);
+        if (map is Map<String, dynamic> && map['content'] != null) {
+          final title = (map['title'] as String?)?.trim() ?? sourceUrl;
+          final markdown = (map['content'] as String?) ?? text;
+          return ExtractedContent(title: title, source: sourceUrl,
+            markdown: markdown, success: markdown.isNotBlank);
+        }
+      } catch (_) {}
+    }
+    // 回退：纯 markdown 格式（兼容旧后端/原生格式）
+    final titleMatch = RegExp(r'^#\s+(.+)$', multiLine: true).firstMatch(text);
     final title = titleMatch?.group(1)?.trim() ?? sourceUrl;
     return ExtractedContent(title: title, source: sourceUrl,
-      markdown: content, success: content.isNotBlank);
+      markdown: text, success: text.isNotBlank);
   }
 
   // ==================== AI 智能排版（商汤 SenseNova） ====================
