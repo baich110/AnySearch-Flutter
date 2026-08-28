@@ -26,6 +26,22 @@ jobs:
           rm -rf android
           flutter create . --platforms=android --project-name=anysearch
 
+      - name: Inject INTERNET permission into AndroidManifest
+        run: |
+          python3 - << 'PY'
+          import re
+          path = 'android/app/src/main/AndroidManifest.xml'
+          with open(path, 'r') as f:
+              c = f.read()
+          perms = '    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n'
+          if 'android.permission.INTERNET' not in c:
+              c = re.sub(r'(<manifest[^>]*>)', r'\1\n' + perms, c, count=1)
+          with open(path, 'w') as f:
+              f.write(c)
+          print('=== 注入后 manifest ===')
+          print(open(path).read())
+          PY
+
       - name: Decode keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks || true
