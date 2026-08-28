@@ -63,7 +63,6 @@ class _AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<SearchViewModel>();
     final scaffoldKey = GlobalKey<ScaffoldState>();
 
     return Scaffold(
