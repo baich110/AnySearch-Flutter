@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/models.dart';
 
 /// AnySearch API 客户端
@@ -7,7 +8,10 @@ import '../models/models.dart';
 /// JSON-RPC 2.0 协议
 class ApiService {
   final Dio _dio;
-  final String _endpoint = 'https://api.anysearch.com/mcp';
+  // Web 平台走 Cloudflare Worker CORS 代理，其他平台直连
+  final String _endpoint = kIsWeb
+      ? 'https://anysearch-api.baichabuyu.asia'
+      : 'https://api.anysearch.com/mcp';
   final String _apiKey = '';
   int _rpcId = 1;
 
