@@ -178,7 +178,7 @@ List<String> parseMarkdownBlocks(String markdown) {
       continue;
     }
     if (current.isNotEmpty) {
-      final prev = current.toString().substringAfterLast('\n').trim();
+      final prev = current.toString().split('\n').last.trim();
       var isNewBlock = false;
       if (t.startsWith('#') || t.startsWith('- ') || t.startsWith('* ') ||
           t.startsWith('>') || t.startsWith('|')) {
