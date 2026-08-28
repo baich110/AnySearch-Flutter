@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/models.dart';
 
 /// AnySearch API 客户端
@@ -8,10 +7,13 @@ import '../models/models.dart';
 /// JSON-RPC 2.0 协议
 class ApiService {
   final Dio _dio;
-  // Web 平台走 Cloudflare Worker CORS 代理，其他平台直连
-  final String _endpoint = kIsWeb
-      ? 'https://anysearch-api.baichabuyu.asia'
-      : 'https://api.anysearch.com/mcp';
+  // 所有平台统一走 Cloudflare Worker CORS 代理。
+  // 原因：api.anysearch.com 只有 IPv4 A 记录，无 IPv6 AAAA 记录，
+  // 在 IPv6 优先的移动网络（如 5G/双卡）下，Android resolver 解析该域名会
+  // 返回 "No address associated with hostname"（Failed host lookup）。
+  // 而 anysearch-api.baichabuyu.asia（Cloudflare Anycast）同时有 IPv6+IPv4，
+  // 双栈网络均可稳定解析与连接，故统一走代理。
+  final String _endpoint = 'https://anysearch-api.baichabuyu.asia';
   final String _apiKey = '';
   int _rpcId = 1;
 
