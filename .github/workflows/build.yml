@@ -37,7 +37,7 @@ jobs:
           with open('android/app/build.gradle.kts','r') as f:
               c = f.read()
           # Add keystore properties at top
-          c = 'val keystoreProperties = java.util.Properties()\nval keystorePropertiesFile = rootProject.file("key.properties")\nif (keystorePropertiesFile.exists()) {\n    keystoreProperties.load(java.io.FileInputStream(keystorePropertiesFile))\n}\n\n' + c
+          c = 'import java.util.Properties\nimport java.io.FileInputStream\n\nval keystoreProperties = Properties()\nval keystorePropertiesFile = rootProject.file("key.properties")\nif (keystorePropertiesFile.exists()) {\n    keystoreProperties.load(FileInputStream(keystorePropertiesFile))\n}\n\n' + c
           # Add signingConfigs inside android block
           c = c.replace(
               '    buildTypes {',
