@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/search_viewmodel.dart';
 import '../../models/models.dart';
@@ -59,14 +58,12 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  // Web 映射 role=searchbox，读屏播报"搜索框"
-                  child: Semantics(
-                    role: SemanticsRole.searchBox,
-                    child: TextField(
-                      controller: _controller,
-                      focusNode: vm.searchFocusNode,
-                      minLines: 1,
-                      maxLines: 5,
+                  // TextField 自带文本输入语义（labelText=搜索关键词），无需 searchBox role
+                  child: TextField(
+                    controller: _controller,
+                    focusNode: vm.searchFocusNode,
+                    minLines: 1,
+                    maxLines: 5,
                       decoration: InputDecoration(
                         labelText: '搜索关键词',
                         hintText: '输入关键词搜索...',
@@ -97,7 +94,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       onSubmitted: (_) => vm.search(),
                       onChanged: vm.updateSearchText,
                     ),
-                  ),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
