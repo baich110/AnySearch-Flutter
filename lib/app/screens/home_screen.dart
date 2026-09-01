@@ -117,13 +117,19 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
             // 顶部菜单按钮
+            // 注意：ActionChip 默认被读屏识别为 checkbox，这里包一层 button 语义
+            // 纠正为"按钮"（真实语义），避免读屏播报"复选框未选中"
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerLeft,
-              child: ActionChip(
-                avatar: const Icon(Icons.menu, size: 18),
-                label: const Text('菜单'),
-                onPressed: widget.onOpenDrawer,
+              child: Semantics(
+                button: true,
+                label: '打开菜单',
+                child: ActionChip(
+                  avatar: const Icon(Icons.menu, size: 18),
+                  label: const Text('菜单'),
+                  onPressed: widget.onOpenDrawer,
+                ),
               ),
             ),
             const Spacer(),
@@ -148,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const Spacer(),
             Text('无障碍友好的多源聚合搜索',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.outlineVariant)),
+                color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ],
         ),
       ),
@@ -164,15 +170,29 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // 标题 + 关闭按钮（读屏可明确退出选择器）
               Padding(
-                padding: const EdgeInsets.all(16),
-                child: Semantics(
-                  header: true,
-                  child: Text('选择垂直领域',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold)),
+                padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Semantics(
+                        header: true,
+                        label: '选择垂直搜索领域，共 ${vm.verticals.length} 个领域',
+                        child: Text('选择垂直领域',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      tooltip: '关闭',
+                      onPressed: () => Navigator.pop(sheetContext),
+                    ),
+                  ],
                 ),
               ),
+              const Divider(height: 1),
               // 取消垂直搜索
               if (vm.selectedVertical != null)
                 ListTile(
@@ -189,27 +209,31 @@ class _HomeScreenState extends State<HomeScreen> {
                   shrinkWrap: true,
                   children: vm.verticals.map((domain) {
                     final isSelected = vm.selectedVertical == domain.key;
-                    return Semantics(
-                      selected: isSelected,
-                      label: isSelected
-                          ? '${domain.name}，已选中'
-                          : domain.name,
-                      child: ListTile(
-                        title: Text(domain.name,
-                          style: TextStyle(
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : null,
-                            fontWeight: isSelected ? FontWeight.bold : null,
-                          )),
-                        trailing: isSelected
-                            ? Icon(Icons.check,
-                                color: Theme.of(context).colorScheme.primary)
-                            : null,
-                        onTap: () {
-                          vm.selectVertical(domain.key);
-                          Navigator.pop(sheetContext);
-                        },
+                    // MergeSemantics：把"分组+按钮"合并成单个语义节点，
+                    // 避免读屏对每个领域重复播报两次
+                    return MergeSemantics(
+                      child: Semantics(
+                        selected: isSelected,
+                        label: isSelected
+                            ? '${domain.name}，已选中'
+                            : domain.name,
+                        child: ListTile(
+                          title: Text(domain.name,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : null,
+                              fontWeight: isSelected ? FontWeight.bold : null,
+                            )),
+                          trailing: isSelected
+                              ? Icon(Icons.check,
+                                  color: Theme.of(context).colorScheme.primary)
+                              : null,
+                          onTap: () {
+                            vm.selectVertical(domain.key);
+                            Navigator.pop(sheetContext);
+                          },
+                        ),
                       ),
                     );
                   }).toList(),

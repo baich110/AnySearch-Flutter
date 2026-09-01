@@ -78,7 +78,9 @@ class _ResultCard extends StatelessWidget {
       index: index,
       child: Semantics(
         label: desc.toString(),
-        button: true,
+        // 用 container 而非 button：整卡可点（提取正文）但不再是"按钮套按钮"，
+        // 内部的"提取并翻译/浏览器打开"是独立操作，读屏能正确识别
+        container: true,
         child: Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: InkWell(

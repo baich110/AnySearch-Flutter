@@ -37,7 +37,7 @@ class _AboutScreenState extends State<AboutScreen> {
             const Text('搜索', textAlign: TextAlign.center,
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const Text('版本 2.0.0', textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey)),
+              style: TextStyle(color: Color(0xFF6B7280))),
             const Divider(height: 32),
             ListTile(title: const Text('开发者'), subtitle: const Text('白茶不语')),
             ListTile(title: const Text('联系邮箱'),
