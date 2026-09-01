@@ -121,16 +121,21 @@ class _ResultCard extends StatelessWidget {
                             style: Theme.of(context).textTheme.labelMedium?.copyWith(
                               color: Theme.of(context).colorScheme.primary)),
                           const SizedBox(width: 4),
+                          // 图标放大到 24 + 44px 触控目标（WCAG 2.5.5）
                           IconButton(
-                            icon: const Icon(Icons.translate, size: 18),
+                            icon: const Icon(Icons.translate, size: 24),
                             tooltip: '提取并翻译',
                             onPressed: onReadTranslate,
+                            constraints: const BoxConstraints(
+                                minWidth: 44, minHeight: 44),
                           ),
                           const SizedBox(width: 4),
                           IconButton(
-                            icon: const Icon(Icons.open_in_browser, size: 18),
+                            icon: const Icon(Icons.open_in_browser, size: 24),
                             tooltip: '浏览器打开',
                             onPressed: onBrowse,
+                            constraints: const BoxConstraints(
+                                minWidth: 44, minHeight: 44),
                           ),
                         ],
                       ),

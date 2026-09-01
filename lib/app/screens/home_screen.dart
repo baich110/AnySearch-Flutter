@@ -56,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
+                    focusNode: vm.searchFocusNode,
                     minLines: 1,
                     maxLines: 5,
                     decoration: InputDecoration(
@@ -117,18 +118,21 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
             // 顶部菜单按钮
-            // 注意：ActionChip 默认被读屏识别为 checkbox，这里包一层 button 语义
-            // 纠正为"按钮"（真实语义），避免读屏播报"复选框未选中"
+            // ActionChip 默认被读屏识别为 checkbox，这里 ExcludeSemantics 屏蔽其内部
+            // 语义，改用自定义 button 语义纠正为"按钮"
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerLeft,
               child: Semantics(
                 button: true,
                 label: '打开菜单',
-                child: ActionChip(
-                  avatar: const Icon(Icons.menu, size: 18),
-                  label: const Text('菜单'),
-                  onPressed: widget.onOpenDrawer,
+                onTap: widget.onOpenDrawer,
+                child: ExcludeSemantics(
+                  child: ActionChip(
+                    avatar: const Icon(Icons.menu, size: 18),
+                    label: const Text('菜单'),
+                    onPressed: widget.onOpenDrawer,
+                  ),
                 ),
               ),
             ),
@@ -142,12 +146,22 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 8),
               Wrap(
                 spacing: 4,
-                children: vm.history.take(10).map((item) => ActionChip(
-                  label: Text(item, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  onPressed: () {
+                children: vm.history.take(10).map((item) => Semantics(
+                  button: true,
+                  label: '搜索 $item',
+                  onTap: () {
                     _controller.text = item;
                     vm.updateSearchText(item);
                   },
+                  child: ExcludeSemantics(
+                    child: ActionChip(
+                      label: Text(item, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      onPressed: () {
+                        _controller.text = item;
+                        vm.updateSearchText(item);
+                      },
+                    ),
+                  ),
                 )).toList(),
               ),
             ],

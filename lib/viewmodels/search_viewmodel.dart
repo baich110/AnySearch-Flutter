@@ -102,6 +102,31 @@ class SearchViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // 搜索框焦点（供快捷键 Ctrl+K 聚焦）
+  final FocusNode searchFocusNode = FocusNode(debugLabel: 'search-field');
+
+  void focusSearch() {
+    searchFocusNode.requestFocus();
+  }
+
+  /// 全局返回/后退快捷键（Esc）按当前界面路由
+  void handleBack() {
+    switch (_state) {
+      case UiStateResults():
+        backFromHistoryResults();
+      case UiStateReading():
+        backToResults();
+      case UiStateHistory():
+        backToHome();
+      case UiStateAbout():
+        backToHome();
+      case UiStateBrowsing():
+        backFromBrowser();
+      default:
+        break;
+    }
+  }
+
   void selectVertical(String? key) {
     _selectedVertical = key;
     notifyListeners();
