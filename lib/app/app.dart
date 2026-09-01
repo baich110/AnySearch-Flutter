@@ -221,7 +221,7 @@ class _ScreenFocusScope extends StatefulWidget {
 }
 
 class _ScreenFocusScopeState extends State<_ScreenFocusScope> {
-  final FocusNode _node = FocusNode(debugLabel: 'screen-scope');
+  final FocusScopeNode _node = FocusScopeNode(debugLabel: 'screen-scope');
 
   @override
   void initState() {
