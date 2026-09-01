@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/search_viewmodel.dart';
 import '../../models/models.dart';
@@ -156,6 +157,11 @@ class _LinkRenderingBlock extends StatelessWidget {
               child: Semantics(
                 link: true,
                 label: seg.text,
+                // 自定义操作：读屏可"上滑/更多操作"选择"浏览器打开"（对齐安卓版）
+                customSemanticsActions: {
+                  const CustomSemanticsAction(label: '浏览器打开'):
+                      () => onBrowse(seg.url),
+                },
                 child: InkWell(
                   onTap: () => onLinkTap(seg.url),
                   child: Text(seg.text,

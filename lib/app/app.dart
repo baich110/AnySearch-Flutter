@@ -245,43 +245,9 @@ class _AppRouter extends StatelessWidget {
         ),
     };
 
-    // 屏幕切换时把读屏/键盘焦点移到新屏幕，避免焦点悬空
-    return _ScreenFocusScope(
-      key: ValueKey('screen-${vm.state.runtimeType}'),
-      child: screen,
-    );
-  }
-}
-
-/// 屏幕切换时把焦点移入新屏幕的焦点作用域
-class _ScreenFocusScope extends StatefulWidget {
-  final Widget child;
-  const _ScreenFocusScope({super.key, required this.child});
-
-  @override
-  State<_ScreenFocusScope> createState() => _ScreenFocusScopeState();
-}
-
-class _ScreenFocusScopeState extends State<_ScreenFocusScope> {
-  final FocusScopeNode _node = FocusScopeNode(debugLabel: 'screen-scope');
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _node.requestFocus();
-    });
-  }
-
-  @override
-  void dispose() {
-    _node.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FocusScope(node: _node, child: widget.child);
+    // 不做自动移焦：避免焦点飘到无标签的容器（读屏乱报）。
+    // 界面定位靠全局播报（statusMessage）承担
+    return screen;
   }
 }
 
