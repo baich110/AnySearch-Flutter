@@ -53,11 +53,22 @@ class _AppShell extends StatelessWidget {
           )
         : const _AppScaffold();
 
+    // Esc：先关掉顶层模态（对话框/底部面板），无模态才按界面返回，
+    // 避免"对话框开着却切走了底层界面"的焦点错乱
+    void handleEscape() {
+      final navigator = Navigator.of(context);
+      if (navigator.canPop()) {
+        navigator.pop();
+      } else {
+        vm.handleBack();
+      }
+    }
+
     return CallbackShortcuts(
       bindings: {
         // Web/桌面键盘快捷键
         const SingleActivator(LogicalKeyboardKey.keyK, control: true): vm.focusSearch,
-        const SingleActivator(LogicalKeyboardKey.escape): vm.handleBack,
+        const SingleActivator(LogicalKeyboardKey.escape): handleEscape,
       },
       child: Focus(
         autofocus: false,
