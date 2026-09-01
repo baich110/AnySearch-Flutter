@@ -140,7 +140,9 @@ jobs:
           flutter create . --platforms=web --project-name=anysearch
           cp /tmp/anysearch-index.html web/index.html
       - run: flutter pub get
-      - run: flutter build web --release
+      # --no-web-resources-cdn：强制使用本地打包的 CanvasKit，
+      # 避免从 gstatic.com 加载（中国大陆被墙导致永远卡在加载页）
+      - run: flutter build web --release --no-web-resources-cdn
       - uses: actions/upload-artifact@v4
         with:
           name: web-build
