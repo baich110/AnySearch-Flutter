@@ -407,9 +407,13 @@ AnySearch 不收集任何个人信息，无广告、无追踪 SDK。
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton(
-                        onPressed: onAgree,
-                        child: const Text('同意并继续'),
+                      // autofocus：首次进入焦点直接落在同意按钮，焦点锁定在弹窗内
+                      Focus(
+                        autofocus: true,
+                        child: TextButton(
+                          onPressed: onAgree,
+                          child: const Text('同意并继续'),
+                        ),
                       ),
                     ],
                   ),

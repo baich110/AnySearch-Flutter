@@ -90,7 +90,10 @@ class _AboutScreenState extends State<AboutScreen> {
   }
 
   void _showDialog(BuildContext context, String title, String content) {
-    showDialog(context: context, builder: (_) =>
+    showDialog(context: context,
+      // 焦点锁定：只能点"确定"
+      barrierDismissible: false,
+      builder: (_) =>
       AlertDialog(title: Text(title),
         content: SizedBox(width: 300, child: SingleChildScrollView(
           child: Text(content))),

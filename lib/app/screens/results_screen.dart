@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/search_viewmodel.dart';
 import '../../models/models.dart';
@@ -35,21 +36,26 @@ class _ResultsScreenState extends State<ResultsScreen> {
             '搜索结果 · $totalCount 条',
             style: const TextStyle(fontWeight: FontWeight.bold))),
         ),
-        body: ListView.builder(
-          controller: _scrollController,
-          padding: const EdgeInsets.all(16),
-          itemCount: state.grouped.values.fold<int>(0, (s, l) => s + l.length),
-          itemBuilder: (context, index) {
-            final flat = state.grouped.values.expand((l) => l).toList();
-            final result = flat[index];
-            return _ResultCard(
-              result: result,
-              index: index,
-              onRead: () { vm.extractContent(result.url); },
-              onBrowse: () { vm.openInBrowser(result.url); },
-              onReadTranslate: () { vm.extractAndTranslate(result.url); },
-            );
-          },
+        body: Semantics(
+          // Web 映射 role=list，读屏播报"列表，N 项"
+          role: SemanticsRole.list,
+          container: true,
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(16),
+            itemCount: state.grouped.values.fold<int>(0, (s, l) => s + l.length),
+            itemBuilder: (context, index) {
+              final flat = state.grouped.values.expand((l) => l).toList();
+              final result = flat[index];
+              return _ResultCard(
+                result: result,
+                index: index,
+                onRead: () { vm.extractContent(result.url); },
+                onBrowse: () { vm.openInBrowser(result.url); },
+                onReadTranslate: () { vm.extractAndTranslate(result.url); },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -77,6 +83,8 @@ class _ResultCard extends StatelessWidget {
     return IndexedSemantics(
       index: index,
       child: Semantics(
+        // Web 映射 role=listitem
+        role: SemanticsRole.listItem,
         label: desc.toString(),
         // 用 container 而非 button：整卡可点（提取正文）但不再是"按钮套按钮"，
         // 内部的"提取并翻译/浏览器打开"是独立操作，读屏能正确识别

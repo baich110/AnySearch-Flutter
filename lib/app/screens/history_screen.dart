@@ -53,6 +53,8 @@ class HistoryScreen extends StatelessWidget {
   void _confirmClearAll(BuildContext context, SearchViewModel vm) {
     showDialog(
       context: context,
+      // 焦点锁定：只能点"取消/清空"，点背景不关闭
+      barrierDismissible: false,
       builder: (_) => AlertDialog(
         title: const Text('清空历史记录'),
         content: const Text('确定要清空所有搜索历史吗？此操作不可撤销。'),

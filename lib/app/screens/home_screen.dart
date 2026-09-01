@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/search_viewmodel.dart';
 import '../../models/models.dart';
@@ -23,9 +24,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<SearchViewModel>();
-    _controller.text = vm.searchText;
-    _controller.selection = TextSelection.fromPosition(
-        TextPosition(offset: vm.searchText.length));
+    // 仅在外部注入文本时同步（如历史记录点选），避免每次重建都重置光标，
+    // 否则读屏用户打字时光标会被强制拉回末尾
+    if (_controller.text != vm.searchText) {
+      _controller.text = vm.searchText;
+      _controller.selection = TextSelection.fromPosition(
+          TextPosition(offset: vm.searchText.length));
+    }
 
     final lineCount =
         vm.searchText.split('\n').where((l) => l.trim().isNotEmpty).length;
@@ -54,40 +59,44 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    focusNode: vm.searchFocusNode,
-                    minLines: 1,
-                    maxLines: 5,
-                    decoration: InputDecoration(
-                      labelText: '搜索关键词',
-                      hintText: '输入关键词搜索...',
-                      helperText: supportText,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                      suffixIcon: vm.searchText.isNotEmpty
-                          ? Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.close),
-                                  tooltip: '清除',
-                                  onPressed: () {
-                                    _controller.clear();
-                                    vm.clearSearchText();
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.search),
-                                  tooltip: '执行搜索',
-                                  onPressed: vm.search,
-                                ),
-                              ],
-                            )
-                          : null,
+                  // Web 映射 role=searchbox，读屏播报"搜索框"
+                  child: Semantics(
+                    role: SemanticsRole.searchBox,
+                    child: TextField(
+                      controller: _controller,
+                      focusNode: vm.searchFocusNode,
+                      minLines: 1,
+                      maxLines: 5,
+                      decoration: InputDecoration(
+                        labelText: '搜索关键词',
+                        hintText: '输入关键词搜索...',
+                        helperText: supportText,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                        suffixIcon: vm.searchText.isNotEmpty
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.close),
+                                    tooltip: '清除',
+                                    onPressed: () {
+                                      _controller.clear();
+                                      vm.clearSearchText();
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.search),
+                                    tooltip: '执行搜索',
+                                    onPressed: vm.search,
+                                  ),
+                                ],
+                              )
+                            : null,
+                      ),
+                      onSubmitted: (_) => vm.search(),
+                      onChanged: vm.updateSearchText,
                     ),
-                    onSubmitted: (_) => vm.search(),
-                    onChanged: vm.updateSearchText,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -178,6 +187,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showVerticalSheet(BuildContext context, SearchViewModel vm) {
     showModalBottomSheet(
       context: context,
+      // 焦点锁定：只能点"关闭"或选择领域退出，禁止点背景/下滑关闭，
+      // 焦点不会飘回背景（无障碍要求）
+      isDismissible: false,
+      enableDrag: false,
       builder: (sheetContext) {
         return SafeArea(
           child: Column(
