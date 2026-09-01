@@ -409,6 +409,15 @@ class SearchViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 错误页"重试"：按上次操作重试（提取失败重试提取，搜索失败重试搜索）
+  void retry() {
+    if (_focusedResultUrl != null && _lastResults != null) {
+      extractContent(_focusedResultUrl!);
+    } else {
+      search();
+    }
+  }
+
   void reset() {
     _state = UiStateIdle();
     _tempRenderLinks = null;

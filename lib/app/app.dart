@@ -334,7 +334,7 @@ class _ErrorView extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
-                    onPressed: vm.search,
+                    onPressed: vm.retry,
                     child: const Text('重试'),
                   ),
                 ],

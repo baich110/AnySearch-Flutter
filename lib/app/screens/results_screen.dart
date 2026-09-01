@@ -36,19 +36,38 @@ class _ResultsScreenState extends State<ResultsScreen> {
             '搜索结果 · $totalCount 条',
             style: const TextStyle(fontWeight: FontWeight.bold))),
         ),
-        body: Semantics(
-          // Web 映射 role=list，读屏播报"列表，N 项"
-          role: SemanticsRole.list,
-          container: true,
-          child: ListView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.all(16),
-            itemCount: state.grouped.values.fold<int>(0, (s, l) => s + l.length),
-            itemBuilder: (context, index) {
-              final flat = state.grouped.values.expand((l) => l).toList();
-              final result = flat[index];
-              return _ResultCard(
-                result: result,
+        body: totalCount == 0
+            // 空结果：明确告知用户，避免读屏只有"0 条"一头雾水
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.search_off, size: 48,
+                        color: Theme.of(context).colorScheme.outline),
+                      const SizedBox(height: 12),
+                      const Text('没有找到相关结果'),
+                      const SizedBox(height: 4),
+                      Text('换个关键词或减少垂直领域限制试试',
+                        style: Theme.of(context).textTheme.bodySmall),
+                    ],
+                  ),
+                ),
+              )
+            : Semantics(
+                // Web 映射 role=list，读屏播报"列表，N 项"
+                role: SemanticsRole.list,
+                container: true,
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: state.grouped.values.fold<int>(0, (s, l) => s + l.length),
+                  itemBuilder: (context, index) {
+                    final flat = state.grouped.values.expand((l) => l).toList();
+                    final result = flat[index];
+                    return _ResultCard(
+                      result: result,
                 index: index,
                 onRead: () { vm.extractContent(result.url); },
                 onBrowse: () { vm.openInBrowser(result.url); },
