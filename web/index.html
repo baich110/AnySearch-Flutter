@@ -1,17 +1,112 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
   <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="AnySearch 跨平台搜索引擎">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <!-- 无障碍：声明页面语言，读屏才能按中文规则发音 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AnySearch 多源聚合搜索引擎——无障碍友好的搜索与阅读工具">
+  <meta name="theme-color" content="#6750A4">
+  <meta name="color-scheme" content="light dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="搜索">
-  <title>搜索</title>
+  <title>AnySearch 搜索</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    /* 加载画面：视觉 + 读屏(aria-live) 双通道提示，避免启动期间一片空白 */
+    #flt-loading {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: #fafafa;
+      color: #444;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      text-align: center;
+      padding: 1rem;
+    }
+    #flt-loading[hidden] { display: none; }
+    .flt-spinner {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 4px solid #e0e0e0;
+      border-top-color: #6750A4;
+      animation: flt-spin 1s linear infinite;
+    }
+    @keyframes flt-spin { to { transform: rotate(360deg); } }
+    /* 尊重系统减少动态效果设置 */
+    @media (prefers-reduced-motion: reduce) {
+      .flt-spinner { animation: none; }
+    }
+    /* 仅读屏可见的提示文本 */
+    .sr-only {
+      position: absolute;
+      left: -9999px;
+      top: auto;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+  </style>
+  <script>
+    // 应用加载完成后自动隐藏加载画面；用 role=status 播报完成，避免读屏陷入空白
+    (function () {
+      var loader = document.getElementById('flt-loading');
+      if (!loader) return;
+      var done = false;
+      function finish() {
+        if (done) return;
+        done = true;
+        if (mo) mo.disconnect();
+        if (timer) window.clearInterval(timer);
+        loader.hidden = true;
+        var status = document.createElement('div');
+        status.className = 'sr-only';
+        status.setAttribute('role', 'status');
+        status.textContent = 'AnySearch 已加载完成';
+        document.body.appendChild(status);
+        window.setTimeout(function () {
+          if (status.parentNode) status.parentNode.removeChild(status);
+        }, 1500);
+      }
+      function check() {
+        if (document.querySelector('flutter-view')) finish();
+      }
+      var mo = new MutationObserver(check);
+      mo.observe(document.body, { childList: true, subtree: true });
+      var timer = window.setInterval(check, 1000);
+      // 兜底：30 秒后仍未就绪，不再轮询，仅追加提示
+      window.setTimeout(function () {
+        if (mo) mo.disconnect();
+        if (timer) window.clearInterval(timer);
+        if (!done) {
+          var p = document.createElement('p');
+          p.textContent = '加载较慢，请耐心等待或刷新重试。';
+          loader.appendChild(p);
+        }
+      }, 30000);
+    })();
+  </script>
 </head>
 <body>
+  <div id="flt-loading" role="status" aria-live="polite">
+    <div class="flt-spinner" aria-hidden="true"></div>
+    <p>AnySearch 正在加载，请稍候…</p>
+  </div>
+  <noscript>
+    <p style="text-align:center;font-family:system-ui,-apple-system,sans-serif;padding:2rem;color:#444;">
+      AnySearch 需要启用 JavaScript 才能运行。
+    </p>
+  </noscript>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -153,15 +153,19 @@ class _LinkRenderingBlock extends StatelessWidget {
           } else if (seg is LinkSegment) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 2),
-              child: InkWell(
-                onTap: () => onLinkTap(seg.url),
-                child: Text(seg.text,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    decoration: TextDecoration.underline,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 15,
-                  )),
+              child: Semantics(
+                link: true,
+                label: seg.text,
+                child: InkWell(
+                  onTap: () => onLinkTap(seg.url),
+                  child: Text(seg.text,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 15,
+                    )),
+                ),
               ),
             );
           }

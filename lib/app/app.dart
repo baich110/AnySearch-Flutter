@@ -38,7 +38,7 @@ class AnySearchApp extends StatelessWidget {
   }
 }
 
-/// 根组件：隐私协议弹窗 + 应用主界面
+/// 根组件：隐私协议弹窗 + 应用主界面 + 全局无障碍实时播报区
 class _AppShell extends StatelessWidget {
   const _AppShell();
 
@@ -46,14 +46,42 @@ class _AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<SearchViewModel>();
 
-    // 首次启动：显示隐私协议弹窗
-    if (!vm.privacyAgreed) {
-      return PrivacyAgreementDialog(
-        onAgree: vm.agreeToPrivacy,
-      );
-    }
+    final content = !vm.privacyAgreed
+        ? PrivacyAgreementDialog(
+            onAgree: vm.agreeToPrivacy,
+          )
+        : const _AppScaffold();
 
-    return const _AppScaffold();
+    return Stack(
+      children: [
+        content,
+        // 全局实时播报：异步状态（搜索/提取/翻译/错误等）自动播报
+        // Web 映射 aria-live，安卓 TalkBack / Windows NVDA 同样生效
+        _StatusLiveRegion(message: vm.statusMessage),
+      ],
+    );
+  }
+}
+
+/// 全局无障碍实时播报区：内容变化时由读屏自动播报
+class _StatusLiveRegion extends StatelessWidget {
+  final String message;
+  const _StatusLiveRegion({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      liveRegion: true,
+      child: Align(
+        alignment: Alignment.bottomLeft,
+        child: SizedBox(
+          width: 1,
+          height: 1,
+          child: Text(message,
+            style: const TextStyle(fontSize: 1, color: Colors.transparent)),
+        ),
+      ),
+    );
   }
 }
 
@@ -184,7 +212,6 @@ class _LoadingView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Semantics(
-        liveRegion: true,
         label: '正在搜索，请稍候',
         child: const Center(
           child: Column(
@@ -209,7 +236,6 @@ class _ExtractingView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Semantics(
-        liveRegion: true,
         label: '正在提取正文内容，请稍候',
         child: Center(
           child: Column(
@@ -242,7 +268,6 @@ class _ErrorView extends StatelessWidget {
     final vm = context.read<SearchViewModel>();
     return Scaffold(
       body: Semantics(
-        liveRegion: true,
         label: '错误: $message',
         child: Center(
           child: Column(

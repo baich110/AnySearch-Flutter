@@ -130,10 +130,15 @@ jobs:
         with:
           channel: 'stable'
           cache: true
-      - name: Regenerate Web platform files
+      - name: Prepare Web platform files (保留无障碍增强的 index.html)
+        shell: bash
         run: |
+          # 备份仓库内定制的无障碍 index.html，flutter create 生成模板后恢复，
+          # 避免默认模板覆盖 lang/加载提示/aria-live 等增强
+          cp web/index.html /tmp/anysearch-index.html
           rm -rf web
           flutter create . --platforms=web --project-name=anysearch
+          cp /tmp/anysearch-index.html web/index.html
       - run: flutter pub get
       - run: flutter build web --release
       - uses: actions/upload-artifact@v4

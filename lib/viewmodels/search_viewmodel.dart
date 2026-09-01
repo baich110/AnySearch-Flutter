@@ -59,6 +59,11 @@ class SearchViewModel extends ChangeNotifier {
   bool _initialized = false;
   bool get initialized => _initialized;
 
+  // 无障碍实时播报文案：全局 liveRegion 展示并自动播报
+  // （Web 映射为 aria-live，安卓 TalkBack / Windows NVDA 均会播报）
+  String _statusMessage = '';
+  String get statusMessage => _statusMessage;
+
   SearchViewModel(this._api) : _storage = StorageService();
 
   /// 启动初始化：读取隐私协议、历史、设置、加载垂直领域
@@ -100,6 +105,7 @@ class SearchViewModel extends ChangeNotifier {
   void agreeToPrivacy() async {
     _privacyAgreed = true;
     await _storage.setPrivacyAgreed();
+    _statusMessage = '已同意隐私政策，欢迎使用 AnySearch';
     notifyListeners();
   }
 
@@ -128,6 +134,7 @@ class SearchViewModel extends ChangeNotifier {
     final lines = text.split('\n').where((l) => l.trim().isNotEmpty).toList();
     final vertical = _selectedVertical;
     _state = UiStateLoading();
+    _statusMessage = '正在搜索，请稍候';
     notifyListeners();
     try {
       Map<String, List<SearchResult>> results;
@@ -150,8 +157,10 @@ class SearchViewModel extends ChangeNotifier {
       _lastResults = UiStateResults(results);
       _fromHistory = false;
       _state = _lastResults!;
+      _statusMessage = '搜索完成，共 $allResults.length 条结果';
     } catch (e) {
       _state = UiStateError(e.toString());
+      _statusMessage = '搜索失败';
     }
     notifyListeners();
   }
@@ -160,6 +169,7 @@ class SearchViewModel extends ChangeNotifier {
 
   void showHistory() {
     _state = UiStateHistory();
+    _statusMessage = '已打开历史记录';
     notifyListeners();
   }
 
@@ -169,6 +179,7 @@ class SearchViewModel extends ChangeNotifier {
     final rs = UiStateResults(grouped);
     _lastResults = rs;
     _state = rs;
+    _statusMessage = '已载入历史搜索结果 ${item.results.length} 条';
     notifyListeners();
   }
 
@@ -190,6 +201,7 @@ class SearchViewModel extends ChangeNotifier {
   void deleteHistoryItem(String id) async {
     await _storage.deleteHistory(id);
     _fullHistory = await _storage.loadHistory();
+    _statusMessage = '已删除该条历史记录';
     notifyListeners();
   }
 
@@ -197,6 +209,7 @@ class SearchViewModel extends ChangeNotifier {
     await _storage.clearHistory();
     _fullHistory = [];
     _history = [];
+    _statusMessage = '已清空所有历史记录';
     notifyListeners();
   }
 
@@ -229,6 +242,7 @@ class SearchViewModel extends ChangeNotifier {
     if (_state is UiStateResults) _lastResults = _state as UiStateResults;
     _focusedResultUrl = url;
     _state = UiStateExtracting(url);
+    _statusMessage = '正在提取正文，请稍候';
     notifyListeners();
     _extractAndMaybeTranslate(url);
   }
@@ -237,12 +251,14 @@ class SearchViewModel extends ChangeNotifier {
     try {
       final content = await _api.extract(url);
       _state = UiStateReading(content, url);
+      _statusMessage = '正文提取完成，进入阅读模式';
       notifyListeners();
       if (_isMostlyEnglish(content.markdown)) {
         translateContent();
       }
     } catch (e) {
       _state = UiStateError(e.toString());
+      _statusMessage = '正文提取失败';
       notifyListeners();
     }
   }
@@ -251,6 +267,7 @@ class SearchViewModel extends ChangeNotifier {
     if (_state is UiStateResults) _lastResults = _state as UiStateResults;
     _focusedResultUrl = url;
     _state = UiStateExtracting(url);
+    _statusMessage = '正在提取并翻译，请稍候';
     notifyListeners();
     try {
       final content = await _api.extract(url);
@@ -264,11 +281,12 @@ class SearchViewModel extends ChangeNotifier {
         url,
         isTranslating: false,
       );
-      notifyListeners();
+      _statusMessage = '提取并翻译完成';
     } catch (e) {
       _state = UiStateError(e.toString());
-      notifyListeners();
+      _statusMessage = '提取或翻译失败';
     }
+    notifyListeners();
   }
 
   // ==================== 翻译 ====================
@@ -277,6 +295,7 @@ class SearchViewModel extends ChangeNotifier {
     final current = _state is UiStateReading ? _state as UiStateReading : null;
     if (current == null || current.isTranslating) return;
     _state = UiStateReading(current.content, current.fromUrl, isTranslating: true);
+    _statusMessage = '正在翻译，请稍候';
     notifyListeners();
     try {
       final translated = await _api.translate(current.content.markdown);
@@ -287,8 +306,10 @@ class SearchViewModel extends ChangeNotifier {
         current.fromUrl,
         isTranslating: false,
       );
+      _statusMessage = '翻译完成';
     } catch (_) {
       _state = current;
+      _statusMessage = '翻译失败';
     }
     notifyListeners();
   }
@@ -299,6 +320,7 @@ class SearchViewModel extends ChangeNotifier {
     final current = _state is UiStateReading ? _state as UiStateReading : null;
     if (current == null || current.isTranslating) return;
     _state = UiStateReading(current.content, current.fromUrl, isTranslating: true);
+    _statusMessage = '正在 AI 排版，请稍候';
     notifyListeners();
     try {
       final html = await _api.aiFormatContent(
@@ -308,9 +330,11 @@ class SearchViewModel extends ChangeNotifier {
       _state = UiStateReading(
         current.content, current.fromUrl,
         isTranslating: false, aiHtml: html);
+      _statusMessage = 'AI 排版完成';
     } catch (e) {
       _state = UiStateReading(
         current.content, current.fromUrl, isTranslating: false);
+      _statusMessage = 'AI 排版失败';
     }
     notifyListeners();
   }
@@ -330,11 +354,13 @@ class SearchViewModel extends ChangeNotifier {
     if (_state is UiStateResults) _lastResults = _state as UiStateResults;
     _focusedResultUrl = url;
     _state = UiStateBrowsing(url);
+    _statusMessage = '已打开浏览器页面';
     notifyListeners();
   }
 
   void backFromBrowser() {
     _state = _lastResults ?? UiStateIdle();
+    _statusMessage = '';
     notifyListeners();
   }
 
@@ -342,22 +368,26 @@ class SearchViewModel extends ChangeNotifier {
 
   void backToResults() {
     _state = _lastResults ?? UiStateIdle();
+    _statusMessage = '';
     notifyListeners();
   }
 
   void reset() {
     _state = UiStateIdle();
     _tempRenderLinks = null;
+    _statusMessage = '';
     notifyListeners();
   }
 
   void showAbout() {
     _state = UiStateAbout();
+    _statusMessage = '已打开关于页面';
     notifyListeners();
   }
 
   void backToHome() {
     _state = UiStateIdle();
+    _statusMessage = '';
     notifyListeners();
   }
 
@@ -371,6 +401,11 @@ class SearchViewModel extends ChangeNotifier {
       _updateInfo = await _api.checkUpdate(currentVersionCode: 6);
     } catch (_) {}
     _checkingUpdate = false;
+    _statusMessage = _updateInfo == null
+        ? '检查更新失败'
+        : (_updateInfo!.hasUpdate
+            ? '发现新版本 ${_updateInfo!.versionName}'
+            : '当前已是最新版本');
     notifyListeners();
   }
 
@@ -382,6 +417,7 @@ class SearchViewModel extends ChangeNotifier {
       _announcement = await _api.getAnnouncement();
     } catch (_) {}
     _announcementLoading = false;
+    _statusMessage = _announcement == null ? '公告加载失败' : '公告已加载';
     notifyListeners();
   }
 

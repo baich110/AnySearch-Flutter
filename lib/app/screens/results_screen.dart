@@ -72,7 +72,7 @@ class _ResultCard extends StatelessWidget {
     final desc = StringBuffer(result.title);
     if (result.snippet.trim().isNotEmpty) desc.write('，摘要：${result.snippet}');
     if (result.source.isNotEmpty) desc.write('，来源：${result.source}');
-    desc.write('，双击提取正文阅读');
+    desc.write('，点按或回车提取正文阅读');
 
     return IndexedSemantics(
       index: index,
