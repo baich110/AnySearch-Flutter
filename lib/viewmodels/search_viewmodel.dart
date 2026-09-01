@@ -144,6 +144,10 @@ class SearchViewModel extends ChangeNotifier {
     await _storage.setPrivacyAgreed();
     _setStatus('已同意隐私政策，欢迎使用 AnySearch');
     notifyListeners();
+    // 进入主页后聚焦搜索框，读屏/键盘用户可直接开始输入
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      searchFocusNode.requestFocus();
+    });
   }
 
   // ==================== 设置 ====================
